@@ -36,7 +36,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     return agg
  
 # load dataset
-dataset = read_csv('pollution.csv', header=0, index_col=0)
+dataset = read_csv('pollution.csv', header=0, index_col=0)#Read the data and take the first row and the first column as the index
 values = dataset.values
 # integer encode direction
 encoder = LabelEncoder()
@@ -46,13 +46,14 @@ values = values.astype('float32')
 # normalize features
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled = scaler.fit_transform(values)
+# specify the number of lag hours
+n_hours = 3
+n_features = 8
 # frame as supervised learning
-reframed = series_to_supervised(scaled, 1, 1)
-# drop columns we don't want to predict
-reframed.drop(reframed.columns[[9,10,11,12,13,14,15]], axis=1, inplace=True)
-print(reframed.head())
+reframed = series_to_supervised(scaled, n_hours, 1)
+print(reframed.shape)
  
-# split into train and test sets
+# split into train and test sets,trainsets size is365 * 24
 values = reframed.values
 n_train_hours = 365 * 24
 train = values[:n_train_hours, :]
@@ -93,3 +94,30 @@ inv_y = inv_y[:,0]
 # calculate RMSE
 rmse = sqrt(mean_squared_error(inv_y, inv_yhat))
 print('Test RMSE: %.3f' % rmse)
+#calculate MSE
+mse_test = np.sum((inv_yhat-inv_y)**2)/len(inv_y)
+print('Test MSE: %.6f' % mse_test)
+#calculate MAE
+mae_test=np.sum(np.absolute(inv_yhat-inv_y))/len(inv_y)
+print('Test MAE: %.4f' % mae_test)
+#calculate R Squared
+R_Squared = 1- mean_squared_error(inv_y,inv_yhat)/ np.var(inv_y)
+print('Test R_Squared: %.4f' % R_Squared)
+
+#plot
+plt.figure(figsize=(16,8))
+plt.plot(inv_y[0:800,], label='true')
+plt.plot(inv_yhat[0:800,], label='pre')
+plt.legend()
+plt.savefig('True_Pre.png', dpi=500, bbox_inches='tight', transparent=False)
+plt.show()
+
+#Print result Preview
+print('loss\n')
+print(history.history['loss'])
+print('val_loss\n')
+print(history.history['val_loss'])
+print('inv_y\n')
+print(inv_y[0:300,])
+print('inv_yhat\n')
+print(inv_yhat[0:300,])
