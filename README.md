@@ -123,11 +123,12 @@ values = values.astype('float32')
 # normalize features
 scaler = MinMaxScaler(feature_range=(0, 1))
 scaled = scaler.fit_transform(values)
+# specify the number of lag hours
+n_hours = 3
+n_features = 8
 # frame as supervised learning
-reframed = series_to_supervised(scaled, 1, 1)
-# drop columns we don't want to predict
-reframed.drop(reframed.columns[[9,10,11,12,13,14,15]], axis=1, inplace=True)
-print(reframed.head())
+reframed = series_to_supervised(scaled, n_hours, 1)
+print(reframed.shape)
 ```
 By running the above code, you can see the transformed data set, which includes 8 input variables (input characteristics) and 1 output variable (air pollution value and label at the current time t)
 
