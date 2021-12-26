@@ -132,6 +132,8 @@ print(reframed.shape)
 ```
 By running the above code, you can see the transformed data set, which includes 8 input variables (input characteristics) and 1 output variable (air pollution value and label at the current time t)
 
+Our framework dataset has 3 * 8 + 8 columns. We will use 3 * 8 or 24 columns as the input of OBS for all features in the first 3 hours. We only take the pollution variable as the output of the next hour
+
 Data set processing is relatively simple. There are many ways to try. Some directions to try include:
 
 1. Code the "wind direction" feature;
@@ -152,14 +154,15 @@ n_train_hours = 365 * 24
 train = values[:n_train_hours, :]
 test = values[n_train_hours:, :]
 # split into input and outputs
-train_X, train_y = train[:, :-1], train[:, -1]
-test_X, test_y = test[:, :-1], test[:, -1]
+n_obs = n_hours * n_features
+train_X, train_y = train[:, :n_obs], train[:, -n_features]
+test_X, test_y = test[:, :n_obs], test[:, -n_features]
+print(train_X.shape, len(train_X), train_y.shape)
 # reshape input to be 3D [samples, timesteps, features]
-train_X = train_X.reshape((train_X.shape[0], 1, train_X.shape[1]))
-test_X = test_X.reshape((test_X.shape[0], 1, test_X.shape[1]))
+train_X = train_X.reshape((train_X.shape[0], n_hours, n_features))
+test_X = test_X.reshape((test_X.shape[0], n_hours, n_features))
 print(train_X.shape, train_y.shape, test_X.shape, test_y.shape)
 ```
-Run the above code to print the input and output formats of training set and test set:(8760, 1, 8) (8760,) (35039, 1, 8) (35039,)
 
 In the LSTM model, there are 50 neurons in the hidden layer and 1 neuron in the output layer (regression problem). The input variable is a time step (t-1). The loss function adopts mean absolute error (MAE), the optimization algorithm adopts Adam, the model adopts 50 epochs, and the size of each batch is 72.
 Finally, set validation in the fit () function_ Data parameter, record the loss of training set and test set, and draw the loss map after completing training and test.
